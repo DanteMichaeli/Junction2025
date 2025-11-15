@@ -12,11 +12,7 @@ interface ItemsTableProps {
 
 export default function ItemsTable({ items }: ItemsTableProps) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md overflow-hidden">
-      <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Items</h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">{items.length} items in inventory</p>
-      </div>
+    <div className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-zinc-50 dark:bg-zinc-800">

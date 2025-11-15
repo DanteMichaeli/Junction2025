@@ -103,6 +103,40 @@ func main() {
 	// Register the SSE endpoint
 	http.HandleFunc("/events", sseHandler)
 
+	// Register the reset-demo endpoint
+	http.HandleFunc("/reset-demo", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Reset the database
+		err := pkg.ResetDatabase(db)
+		if err != nil {
+			log.Printf("Failed to reset database: %v", err)
+			http.Error(w, "Failed to reset database", http.StatusInternalServerError)
+			return
+		}
+
+		log.Println("🔄 Demo reset successfully!")
+
+		// Return success
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"message": "Database reset successfully",
+		})
+	})
+
 	// Register the add-item-to-basket endpoint
 	http.HandleFunc("/add-item-to-basket", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
