@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -14,11 +15,18 @@ func initDB() {
 	}
 	defer db.Close()
 
-	// Create Items table
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS items (
+	// Drop and recreate Items table to add keywords column
+	_, err = db.Exec(`DROP TABLE IF EXISTS items;`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create Items table with keywords
+	_, err = db.Exec(`CREATE TABLE items (
     id STRING PRIMARY KEY,
     name STRING NOT NULL,
-    price DECIMAL(10, 2) NOT NULL
+    price DECIMAL(10, 2) NOT NULL,
+    keywords TEXT NOT NULL
 );`)
 	if err != nil {
 		log.Fatal(err)
@@ -45,11 +53,57 @@ func initDB() {
 		log.Fatal(err)
 	}
 
-	// Insert sample data
-	_, err = db.Exec(`INSERT OR IGNORE INTO items (id, name, price) VALUES
-    ('pepsi-max', 'Pepsi Max', 1.99),
-    ('sunmaid-sour-raisins', 'Sunmaid Sour Raisins', 1.50);
-`)
+	// Insert sample data with keywords
+	pepsiKeywords := strings.Join([]string{
+		"pepsi", "pepsi max", "cola", "soda",
+		"soft drink", "carbonated soft drinks", "soft drinks",
+		"can", "aluminum can", "steel and tin cans", "tin", "cans",
+		"beverage", "drink", "non-alcoholic drink", "liquid",
+		"carbonated", "cylinder", "aluminum",
+		"logo", "label", "black", "thirsty",
+		"steel", "gadget", "plastic",
+	}, ",")
+
+	sunmaidKeywords := strings.Join([]string{
+		"sun-maid", "sunmaid", "sun maid",
+		"raisin", "raisins", "sour", "sour raisin",
+		"golden raisins", "dried fruit",
+		"snack", "snacks", "box", "fruit",
+		"packaging and labeling", "label", "logo",
+		"watermelon", "flavored", "natural flavors",
+	}, ",")
+
+	vitaminWellKeywords := strings.Join([]string{
+		"vitamin well", "vitamin", "well", "refresh",
+		"bottle", "plastic bottle", "water bottle", "glass",
+		"drink", "beverage", "water", "vitamin water", "soft drink",
+		"functional drink", "fluid", "liquid",
+		"drinkware", "label", "bottle cap", "personal care",
+		"chemical compound", "plastic",
+		"b12", "c-vitamiini", "sinkki", "lemonaden", "kiivin",
+		"calorie", "juoma",
+	}, ",")
+
+	estrellaKeywords := strings.Join([]string{
+		"estrella",
+		"maapähkinä", "rinkula", "maapähkinävoita",
+		"chips", "crisps", "snack", "snack-renkait", "peanut",
+		"bag", "potato chips", "salty snack",
+		"ingredient", "food", "breakfast cereal", "cereal",
+		"finger food", "packaging and labeling", "produce",
+		"junk food", "breakfast box", "convenience food",
+		"fast food", "staple food", "recipe",
+		"label", "logo", "graphic design", "advertising",
+		"natural foods",
+		"vegan", "makean suolainen", "rouskuva", "maku",
+	}, ",")
+
+	_, err = db.Exec(`INSERT OR IGNORE INTO items (id, name, price, keywords) VALUES
+    ('pepsi-max', 'Pepsi Max', 1.99, ?),
+    ('sunmaid-sour-raisins', 'Sunmaid Sour Raisins', 1.50, ?),
+    ('vitamin-well-refresh', 'Vitamin Well Refresh', 3.29, ?),
+    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.99, ?);
+`, pepsiKeywords, sunmaidKeywords, vitaminWellKeywords, estrellaKeywords)
 	if err != nil {
 		log.Fatal(err)
 	}
