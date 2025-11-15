@@ -14,6 +14,9 @@ export default function Home() {
   const [userName, setUserName] = useState<string>("");
   const [hasStarted, setHasStarted] = useState(false);
   const [nameInput, setNameInput] = useState<string>("");
+  const [startTime, setStartTime] = useState<number>(0);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   // Fetch items and basket ID from backend
   useEffect(() => {
@@ -42,17 +45,43 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // Timer effect - updates every second
+  useEffect(() => {
+    if (!hasStarted || isComplete) return;
+
+    const interval = setInterval(() => {
+      setElapsedTime(Date.now() - startTime);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [hasStarted, startTime, isComplete]);
+
   // Set up SSE for real-time updates (items added to cart)
   useEffect(() => {
     const eventSource = new EventSource(`${API_URL}/events`);
 
     eventSource.onmessage = (event) => {
       try {
-        const newItem: Item = JSON.parse(event.data);
-        console.log("New item added to cart:", newItem);
+        const data = JSON.parse(event.data);
         
-        // Add item to cart (allow duplicates)
-        setCartItems((prevCart) => [...prevCart, newItem]);
+        // Check if this is an item or completion message
+        if (data.item) {
+          const newItem: Item = data.item;
+          console.log("New item added to cart:", newItem);
+          
+          // Add item to cart (allow duplicates)
+          setCartItems((prevCart) => [...prevCart, newItem]);
+          
+          // Check if basket is complete
+          if (data.isComplete) {
+            setIsComplete(true);
+            console.log("🎉 Basket completed!");
+          }
+        } else {
+          // Legacy format (just item)
+          const newItem: Item = data;
+          setCartItems((prevCart) => [...prevCart, newItem]);
+        }
       } catch (error) {
         console.error("Error parsing SSE data:", error);
       }
@@ -119,6 +148,14 @@ export default function Home() {
     }
   };
 
+  // Format elapsed time as MM:SS
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   // Handle start shopping
   const handleStartShopping = async () => {
     if (!nameInput.trim()) return;
@@ -140,6 +177,12 @@ export default function Home() {
         // Set user name and basket ID
         setUserName(nameInput.trim());
         setCurrentBasketId(data.basketId);
+        
+        // Start the timer
+        setStartTime(Date.now());
+        setElapsedTime(0);
+        setIsComplete(false);
+        
         setHasStarted(true);
       } else {
         alert("Failed to create basket");
@@ -202,20 +245,40 @@ export default function Home() {
               <p className="text-zinc-600 dark:text-zinc-400 mt-1">Welcome, {userName}!</p>
             </div>
             
-            {/* Test Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={handleTestAddItems}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors text-sm"
-              >
-                🧪 Test: Add All Items
-              </button>
-              <button
-                onClick={handleResetDemo}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm"
-              >
-                🔄 Reset Demo
-              </button>
+            {/* Timer Display */}
+            <div className="flex items-center gap-4">
+              <div className={`px-6 py-3 rounded-lg ${
+                isComplete 
+                  ? 'bg-green-100 dark:bg-green-900 border-2 border-green-500' 
+                  : 'bg-blue-100 dark:bg-blue-900'
+              }`}>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">
+                  {isComplete ? '✅ Completed' : '⏱️ Time'}
+                </p>
+                <p className={`text-3xl font-mono font-bold ${
+                  isComplete 
+                    ? 'text-green-700 dark:text-green-300' 
+                    : 'text-blue-700 dark:text-blue-300'
+                }`}>
+                  {formatTime(elapsedTime)}
+                </p>
+              </div>
+              
+              {/* Test Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleTestAddItems}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors text-sm"
+                >
+                  🧪 Test: Add All Items
+                </button>
+                <button
+                  onClick={handleResetDemo}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm"
+                >
+                  🔄 Reset Demo
+                </button>
+              </div>
             </div>
           </div>
         </div>

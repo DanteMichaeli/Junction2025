@@ -251,16 +251,20 @@ func main() {
 			log.Printf("🎉 Basket %s completed! All 3 items collected.", activeBasketID)
 		}
 
-		// Step 4: Broadcast to frontend via SSE
-		go broadcastNewItem(item)
+		// Step 4: Broadcast to frontend via SSE with completion status
+		responseData := map[string]interface{}{
+			"item":       item,
+			"isComplete": isComplete,
+		}
+		msg, _ := json.Marshal(responseData)
+		for client := range clients {
+			client <- string(msg)
+		}
 
 		// Return the item data with completion status
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"item":       item,
-			"isComplete": isComplete,
-		})
+		json.NewEncoder(w).Encode(responseData)
 	})
 
 	log.Println("Server starting on port 3001...")
