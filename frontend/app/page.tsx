@@ -1,19 +1,67 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ItemsTable, { Item } from "./components/ItemsTable";
 
-// Mock data - replace this with actual database fetching
-const mockItems: Item[] = [
-  { id: 1, name: "Pepsi Max", price: 2.49 },
-  { id: 2, name: "Vitamin Well Refresh", price: 3.29 },
-  { id: 3, name: "Estrella Maapähkinä Rinkula", price: 2.99 },
-  { id: 4, name: "Red Bull", price: 2.95 },
-];
-
-// Current active basket ID
-const currentBasketId = 1;
+// Backend API URL
+const API_URL = "http://localhost:3001";
 
 export default function Home() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [currentBasketId] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch items from backend
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await fetch(`${API_URL}/items`);
+        if (response.ok) {
+          const data = await response.json();
+          setItems(data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
+  // Set up SSE for real-time updates
+  useEffect(() => {
+    const eventSource = new EventSource(`${API_URL}/events`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const newItem: Item = JSON.parse(event.data);
+        console.log("New item created:", newItem);
+        
+        // Add new item to the list if it doesn't already exist
+        setItems((prevItems) => {
+          const exists = prevItems.some((item) => item.id === newItem.id);
+          if (!exists) {
+            return [...prevItems, newItem];
+          }
+          return prevItems;
+        });
+      } catch (error) {
+        console.error("Error parsing SSE data:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("SSE connection error:", error);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
   const handleCreateBasket = () => {
     // This will be connected to your API
     console.log("Creating new basket...");
@@ -50,27 +98,33 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
-              <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Items</h3>
-              <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">{mockItems.length}</p>
-              <p className="text-sm text-zinc-500 dark:text-zinc-500 mt-1">Available products</p>
-            </div>
-
-            <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
-              <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Value</h3>
-              <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">
-                €{mockItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
-              </p>
-              <p className="text-sm text-zinc-500 dark:text-zinc-500 mt-1">Combined item prices</p>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-zinc-600 dark:text-zinc-400">Loading items...</div>
           </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
+                <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Items</h3>
+                <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">{items.length}</p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-500 mt-1">Available products</p>
+              </div>
 
-          {/* Items Table */}
-          <ItemsTable items={mockItems} />
-        </div>
+              <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
+                <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Value</h3>
+                <p className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 mt-2">
+                  €{items.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
+                </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-500 mt-1">Combined item prices</p>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <ItemsTable items={items} />
+          </div>
+        )}
       </main>
     </div>
   );
