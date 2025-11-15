@@ -3,6 +3,8 @@ package pkg
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Item represents a store item
@@ -56,4 +58,20 @@ func GetAllItems(db *sql.DB) ([]Item, error) {
 func AddItemToBasket(db *sql.DB, itemID string, basketID string) error {
 	_, err := db.Exec("INSERT INTO item_basket (itemID, basketID) VALUES (?, ?)", itemID, basketID)
 	return err
+}
+
+// CreateBasket creates a new basket with the given owner name
+// Returns the generated basket UUID
+func CreateBasket(db *sql.DB, ownerName string) (string, error) {
+	basketUUID := uuid.New().String()
+
+	_, err := db.Exec(`INSERT INTO baskets (basketID, ownerName, createDate, status) VALUES
+		(?, ?, date('now'), 'pending');
+	`, basketUUID, ownerName)
+
+	if err != nil {
+		return "", err
+	}
+
+	return basketUUID, nil
 }

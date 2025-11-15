@@ -4,35 +4,33 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// SetupDatabase creates the database schema and inserts sample data
-// Returns the database connection and the generated basket UUID
-func SetupDatabase(dbPath string) (*sql.DB, string, error) {
+// SetupDatabase creates the database schema and inserts sample items
+// Baskets are created by users, not pre-populated
+func SetupDatabase(dbPath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Create tables
 	err = createTables(db)
 	if err != nil {
 		db.Close()
-		return nil, "", err
+		return nil, err
 	}
 
-	// Insert sample data and get generated basket UUID
-	basketUUID, err := insertSampleData(db)
+	// Insert sample items only (no baskets)
+	err = insertSampleItems(db)
 	if err != nil {
 		db.Close()
-		return nil, "", err
+		return nil, err
 	}
 
 	log.Println("✅ Database setup complete!")
-	log.Printf("🛒 Active Basket UUID: %s", basketUUID)
-	return db, basketUUID, nil
+	return db, nil
 }
 
 // createTables creates all necessary database tables
@@ -73,9 +71,9 @@ func createTables(db *sql.DB) error {
 	return nil
 }
 
-// insertSampleData inserts predefined sample items and baskets
-// Returns the generated basket UUID
-func insertSampleData(db *sql.DB) (string, error) {
+// insertSampleItems inserts predefined sample items only
+// Baskets are created by users when they start shopping
+func insertSampleItems(db *sql.DB) error {
 	// Insert sample items
 	_, err := db.Exec(`INSERT OR IGNORE INTO items (id, name, price) VALUES
     ('pepsi-max', 'Pepsi Max', 1.99),
@@ -84,22 +82,11 @@ func insertSampleData(db *sql.DB) (string, error) {
     ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.99);
 `)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Generate a random UUID for the basket
-	basketUUID := uuid.New().String()
-
-	// Insert sample basket with generated UUID
-	_, err = db.Exec(`INSERT OR IGNORE INTO baskets (basketID, ownerName, createDate, status) VALUES
-    (?, 'Demo User', date('now'), 'pending');
-`, basketUUID)
-	if err != nil {
-		return "", err
-	}
-
-	log.Println("📦 Sample data inserted successfully")
-	return basketUUID, nil
+	log.Println("📦 Sample items inserted successfully")
+	return nil
 }
 
 // CleanupDatabase drops all tables and clears the database
@@ -117,24 +104,10 @@ func CleanupDatabase(db *sql.DB) error {
 	return nil
 }
 
-// ResetDatabase cleans and recreates the database with sample data
-// Returns the newly generated basket UUID
-func ResetDatabase(db *sql.DB) (string, error) {
-	err := CleanupDatabase(db)
-	if err != nil {
-		return "", err
-	}
-
-	err = createTables(db)
-	if err != nil {
-		return "", err
-	}
-
-	basketUUID, err := insertSampleData(db)
-	if err != nil {
-		return "", err
-	}
-
-	log.Println("🔄 Database reset complete!")
-	return basketUUID, nil
+// ResetDatabase does nothing to the database - just resets the active session
+// All baskets and their items persist in the database for history
+func ResetDatabase(db *sql.DB) error {
+	// Don't delete anything - keep full history
+	log.Println("🔄 Demo reset complete! All data preserved in database.")
+	return nil
 }

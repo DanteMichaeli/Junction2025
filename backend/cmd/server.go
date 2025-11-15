@@ -58,15 +58,14 @@ func broadcastNewItem(item pkg.Item) {
 }
 
 func main() {
-	// Setup database with schema and sample data
-	db, basketUUID, err := pkg.SetupDatabase("./app.db")
+	// Setup database with schema and sample items
+	db, err := pkg.SetupDatabase("./app.db")
 	if err != nil {
 		log.Fatal("Failed to setup database:", err)
 	}
 	defer db.Close()
 
-	// Set the active basket ID
-	activeBasketID = basketUUID
+	// No active basket on startup - users create their own
 
 	http.HandleFunc("/items", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
@@ -126,6 +125,52 @@ func main() {
 		})
 	})
 
+	// Register endpoint to create new basket with owner name
+	http.HandleFunc("/create-basket", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Parse request
+		var request struct {
+			OwnerName string `json:"ownerName"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil || request.OwnerName == "" {
+			http.Error(w, "Owner name is required", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		// Create new basket with owner name
+		newBasketUUID, err := pkg.CreateBasket(db, request.OwnerName)
+		if err != nil {
+			log.Printf("Failed to create basket: %v", err)
+			http.Error(w, "Failed to create basket", http.StatusInternalServerError)
+			return
+		}
+
+		// Update active basket ID
+		activeBasketID = newBasketUUID
+		log.Printf("🛒 Created new basket for %s: %s", request.OwnerName, activeBasketID)
+
+		// Return new basket ID
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"basketId":  activeBasketID,
+			"ownerName": request.OwnerName,
+		})
+	})
+
 	// Register the reset-demo endpoint
 	http.HandleFunc("/reset-demo", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
@@ -141,25 +186,24 @@ func main() {
 			return
 		}
 
-		// Reset the database and get new basket UUID
-		newBasketUUID, err := pkg.ResetDatabase(db)
+		// Reset the database
+		err := pkg.ResetDatabase(db)
 		if err != nil {
 			log.Printf("Failed to reset database: %v", err)
 			http.Error(w, "Failed to reset database", http.StatusInternalServerError)
 			return
 		}
 
-		// Update the active basket ID
-		activeBasketID = newBasketUUID
-		log.Printf("🔄 Demo reset successfully! New basket UUID: %s", activeBasketID)
+		// Clear the active basket ID (user will create new one)
+		activeBasketID = ""
+		log.Println("🔄 Demo reset successfully! Baskets cleared.")
 
 		// Return success
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success":  true,
-			"message":  "Database reset successfully",
-			"basketId": activeBasketID,
+			"success": true,
+			"message": "Database reset successfully",
 		})
 	})
 

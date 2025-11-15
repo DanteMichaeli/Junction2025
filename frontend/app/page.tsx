@@ -102,18 +102,11 @@ export default function Home() {
       });
       
       if (response.ok) {
-        const data = await response.json();
         console.log("✅ Demo reset successfully");
         
-        // Clear cart items in frontend
+        // Clear everything and return to welcome screen
         setCartItems([]);
-        
-        // Update basket ID with new UUID
-        if (data.basketId) {
-          setCurrentBasketId(data.basketId);
-        }
-        
-        // Reset to welcome screen
+        setCurrentBasketId("");
         setHasStarted(false);
         setUserName("");
         setNameInput("");
@@ -127,10 +120,33 @@ export default function Home() {
   };
 
   // Handle start shopping
-  const handleStartShopping = () => {
-    if (nameInput.trim()) {
-      setUserName(nameInput.trim());
-      setHasStarted(true);
+  const handleStartShopping = async () => {
+    if (!nameInput.trim()) return;
+    
+    try {
+      // Create new basket with user's name
+      const response = await fetch(`${API_URL}/create-basket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ownerName: nameInput.trim() }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Basket created:", data);
+        
+        // Set user name and basket ID
+        setUserName(nameInput.trim());
+        setCurrentBasketId(data.basketId);
+        setHasStarted(true);
+      } else {
+        alert("Failed to create basket");
+      }
+    } catch (error) {
+      console.error("❌ Failed to create basket:", error);
+      alert("Failed to create basket");
     }
   };
 
