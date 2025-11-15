@@ -15,6 +15,7 @@ type Item struct {
 // Basket represents a shopping basket
 type Basket struct {
 	ID         string    `json:"id"`
+	OwnerName  string    `json:"ownerName"`
 	CreateDate time.Time `json:"createDate"`
 	Status     string    `json:"status"`
 }

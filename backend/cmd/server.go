@@ -11,8 +11,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var clients = make(map[chan string]bool)                    // Store clients
-var activeBasketID = "550e8400-e29b-41d4-a716-446655440000" // Current active basket ID
+var clients = make(map[chan string]bool) // Store clients
+var activeBasketID string                // Current active basket ID (set on startup)
 
 // CORS middleware
 func enableCORS(w http.ResponseWriter) {
@@ -59,11 +59,14 @@ func broadcastNewItem(item pkg.Item) {
 
 func main() {
 	// Setup database with schema and sample data
-	db, err := pkg.SetupDatabase("./app.db")
+	db, basketUUID, err := pkg.SetupDatabase("./app.db")
 	if err != nil {
 		log.Fatal("Failed to setup database:", err)
 	}
 	defer db.Close()
+
+	// Set the active basket ID
+	activeBasketID = basketUUID
 
 	http.HandleFunc("/items", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
@@ -103,6 +106,26 @@ func main() {
 	// Register the SSE endpoint
 	http.HandleFunc("/events", sseHandler)
 
+	// Register endpoint to get current basket ID
+	http.HandleFunc("/current-basket", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "GET" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"basketId": activeBasketID,
+		})
+	})
+
 	// Register the reset-demo endpoint
 	http.HandleFunc("/reset-demo", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
@@ -118,22 +141,25 @@ func main() {
 			return
 		}
 
-		// Reset the database
-		err := pkg.ResetDatabase(db)
+		// Reset the database and get new basket UUID
+		newBasketUUID, err := pkg.ResetDatabase(db)
 		if err != nil {
 			log.Printf("Failed to reset database: %v", err)
 			http.Error(w, "Failed to reset database", http.StatusInternalServerError)
 			return
 		}
 
-		log.Println("🔄 Demo reset successfully!")
+		// Update the active basket ID
+		activeBasketID = newBasketUUID
+		log.Printf("🔄 Demo reset successfully! New basket UUID: %s", activeBasketID)
 
 		// Return success
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": true,
-			"message": "Database reset successfully",
+			"success":  true,
+			"message":  "Database reset successfully",
+			"basketId": activeBasketID,
 		})
 	})
 

@@ -9,26 +9,34 @@ const API_URL = "http://localhost:3001";
 export default function Home() {
   const [items, setItems] = useState<Item[]>([]); // Store catalog
   const [cartItems, setCartItems] = useState<Item[]>([]); // Items in cart
-  const [currentBasketId] = useState(1);
+  const [currentBasketId, setCurrentBasketId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch items from backend
+  // Fetch items and basket ID from backend
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/items`);
-        if (response.ok) {
-          const data = await response.json();
+        // Fetch items
+        const itemsResponse = await fetch(`${API_URL}/items`);
+        if (itemsResponse.ok) {
+          const data = await itemsResponse.json();
           setItems(data || []);
         }
+
+        // Fetch current basket ID
+        const basketResponse = await fetch(`${API_URL}/current-basket`);
+        if (basketResponse.ok) {
+          const basketData = await basketResponse.json();
+          setCurrentBasketId(basketData.basketId);
+        }
       } catch (error) {
-        console.error("Error fetching items:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchItems();
+    fetchData();
   }, []);
 
   // Set up SSE for real-time updates (items added to cart)
@@ -91,10 +99,18 @@ export default function Home() {
       });
       
       if (response.ok) {
+        const data = await response.json();
         console.log("✅ Demo reset successfully");
+        
         // Clear cart items in frontend
         setCartItems([]);
-        alert("Demo reset! Cart cleared.");
+        
+        // Update basket ID with new UUID
+        if (data.basketId) {
+          setCurrentBasketId(data.basketId);
+        }
+        
+        alert("Demo reset! Cart cleared with new basket ID.");
       }
     } catch (error) {
       console.error("❌ Failed to reset demo:", error);
