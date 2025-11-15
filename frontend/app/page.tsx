@@ -11,6 +11,9 @@ export default function Home() {
   const [cartItems, setCartItems] = useState<Item[]>([]); // Items in cart
   const [currentBasketId, setCurrentBasketId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState<string>("");
+  const [hasStarted, setHasStarted] = useState(false);
+  const [nameInput, setNameInput] = useState<string>("");
 
   // Fetch items and basket ID from backend
   useEffect(() => {
@@ -110,13 +113,67 @@ export default function Home() {
           setCurrentBasketId(data.basketId);
         }
         
-        alert("Demo reset! Cart cleared with new basket ID.");
+        // Reset to welcome screen
+        setHasStarted(false);
+        setUserName("");
+        setNameInput("");
+        
+        alert("Demo reset! Returning to welcome screen.");
       }
     } catch (error) {
       console.error("❌ Failed to reset demo:", error);
       alert("Failed to reset demo");
     }
   };
+
+  // Handle start shopping
+  const handleStartShopping = () => {
+    if (nameInput.trim()) {
+      setUserName(nameInput.trim());
+      setHasStarted(true);
+    }
+  };
+
+  // Show welcome screen if user hasn't started
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl p-8 max-w-md w-full">
+          <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 text-center">
+            Walk Through™
+          </h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center">
+            The future of shopping
+          </p>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                Enter your name to start shopping
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleStartShopping()}
+                placeholder="Your name"
+                className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+              />
+            </div>
+            
+            <button
+              onClick={handleStartShopping}
+              disabled={!nameInput.trim()}
+              className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold text-lg rounded-lg transition-colors shadow-lg hover:shadow-xl"
+            >
+              Start Shopping 🛒
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -126,7 +183,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Walk Through™</h1>
-              <p className="text-zinc-600 dark:text-zinc-400 mt-1">The future of shopping</p>
+              <p className="text-zinc-600 dark:text-zinc-400 mt-1">Welcome, {userName}!</p>
             </div>
             
             {/* Test Buttons */}
