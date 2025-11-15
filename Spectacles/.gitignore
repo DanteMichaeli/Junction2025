@@ -1,0 +1,52 @@
+# Shipped by Lens Studio
+
+# The lines below are automatically generated and updated by Lens Studio.
+# Please do not modify them manually, as changes will be overwritten each time!
+# If you want to make changes to this file, please put them either above or below this section.
+
+Cache/**
+PluginsUserPreferences/**
+Support/**
+BackUp/**
+Workspaces/**
+.vscode/
+/jsconfig.json
+/tsconfig.json
+.DS_Store
+*.lock
+
+# Shipped by Lens Studio
+
+# Build artifacts
+*.lsz
+*.zip
+*.tar.gz
+dist/
+build/
+
+# Node / TypeScript (Interaction Kit uses TS toolchain)
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Logs
+*.log
+logs/
+crash-logs/
+
+# Temp files
+*.tmp
+*.temp
+*~
+*.bak
+
+# Preview media
+Preview/
+*.mp4
+*.mov
+*.png
+*.jpg
+
+# OS files
+Thumbs.db
+desktop.ini
