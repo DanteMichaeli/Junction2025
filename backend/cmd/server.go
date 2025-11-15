@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"moneybadgers-backend/pkg"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var clients = make(map[chan string]bool) // Store clients
+var itemsList = []pkg.Item{}              // In-memory items list
 
 // CORS middleware
 func enableCORS(w http.ResponseWriter) {
@@ -79,29 +81,32 @@ func main() {
 		case "GET":
 			id := r.URL.Query().Get("id")
 			if id == "" {
-				items, err := pkg.GetAllItems(db)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				json.NewEncoder(w).Encode(items)
+				// Return all items from in-memory list
+				json.NewEncoder(w).Encode(itemsList)
 			} else {
-				item, err := pkg.GetItem(db, id)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
+				// Find specific item by ID
+				var foundItem *pkg.Item
+				for _, item := range itemsList {
+					if item.ID == id {
+						foundItem = &item
+						break
+					}
+				}
+				if foundItem == nil {
+					http.Error(w, "Item not found", http.StatusNotFound)
 					return
 				}
-				json.NewEncoder(w).Encode(item)
+				json.NewEncoder(w).Encode(foundItem)
 			}
 
 		case "POST":
 			var item pkg.Item
 			json.NewDecoder(r.Body).Decode(&item)
-			err = pkg.CreateItem(db, item)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+			
+			// Append to in-memory list
+			itemsList = append(itemsList, item)
+			log.Printf("Added item to list: %+v (Total items: %d)", item, len(itemsList))
+			
 			w.WriteHeader(http.StatusCreated)
 
 			// Notify via SSE
@@ -110,20 +115,44 @@ func main() {
 		case "PUT":
 			var item pkg.Item
 			json.NewDecoder(r.Body).Decode(&item)
-			err = pkg.UpdateItem(db, item)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			
+			// Update in in-memory list
+			found := false
+			for i, existingItem := range itemsList {
+				if existingItem.ID == item.ID {
+					itemsList[i] = item
+					found = true
+					log.Printf("Updated item: %+v", item)
+					break
+				}
+			}
+			
+			if !found {
+				http.Error(w, "Item not found", http.StatusNotFound)
 				return
 			}
+			
 			w.WriteHeader(http.StatusOK)
 
 		case "DELETE":
 			id := r.URL.Query().Get("id")
-			err = pkg.DeleteItem(db, id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			
+			// Remove from in-memory list
+			found := false
+			for i, item := range itemsList {
+				if item.ID == id {
+					itemsList = append(itemsList[:i], itemsList[i+1:]...)
+					found = true
+					log.Printf("Deleted item: %s (Total items: %d)", id, len(itemsList))
+					break
+				}
+			}
+			
+			if !found {
+				http.Error(w, "Item not found", http.StatusNotFound)
 				return
 			}
+			
 			w.WriteHeader(http.StatusNoContent)
 
 		default:
@@ -133,6 +162,78 @@ func main() {
 
 	// Register the SSE endpoint
 	http.HandleFunc("/events", sseHandler)
+
+	// Register the add-predefined-item endpoint
+	http.HandleFunc("/add-predefined-item", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Parse the item name from request
+		var request struct {
+			ItemName string `json:"itemName"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			http.Error(w, "Failed to parse request", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		// Define predefined items with their prices
+		predefinedItems := map[string]struct {
+			Name  string
+			Price float64
+		}{
+			"red bull can": {
+				Name:  "Red Bull Can",
+				Price: 2.49,
+			},
+			"vitamin well plastic bottle": {
+				Name:  "Vitamin Well Plastic Bottle",
+				Price: 3.99,
+			},
+			"chips bag": {
+				Name:  "Chips Bag",
+				Price: 1.99,
+			},
+		}
+
+		// Validate and get the predefined item
+		itemDef, exists := predefinedItems[request.ItemName]
+		if !exists {
+			http.Error(w, "Invalid item name. Must be one of: 'red bull can', 'vitamin well plastic bottle', or 'chips bag'", http.StatusBadRequest)
+			return
+		}
+
+		// Create a new item with generated ID
+		newItem := pkg.Item{
+			ID:    fmt.Sprintf("%s-%d", request.ItemName, time.Now().UnixNano()),
+			Name:  itemDef.Name,
+			Price: itemDef.Price,
+		}
+
+		// Append to in-memory list
+		itemsList = append(itemsList, newItem)
+		log.Printf("Added item to list: %+v (Total items: %d)", newItem, len(itemsList))
+
+		// Broadcast to frontend via SSE
+		go broadcastNewItem(newItem)
+
+		// Return the created item
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(newItem)
+	})
 
 	// Register the classify-item endpoint
 	http.HandleFunc("/classify-item", func(w http.ResponseWriter, r *http.Request) {
