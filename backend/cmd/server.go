@@ -186,17 +186,10 @@ func main() {
 			return
 		}
 
-		// Reset the database
-		err := pkg.ResetDatabase(db)
-		if err != nil {
-			log.Printf("Failed to reset database: %v", err)
-			http.Error(w, "Failed to reset database", http.StatusInternalServerError)
-			return
-		}
-
 		// Clear the active basket ID (user will create new one)
+		// Database keeps all history - nothing is deleted
 		activeBasketID = ""
-		log.Println("🔄 Demo reset successfully! Baskets cleared.")
+		log.Println("🔄 Demo session reset! Ready for next user.")
 
 		// Return success
 		w.Header().Set("Content-Type", "application/json")

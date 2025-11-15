@@ -103,11 +103,3 @@ func CleanupDatabase(db *sql.DB) error {
 	log.Println("🧹 Database cleaned up successfully")
 	return nil
 }
-
-// ResetDatabase does nothing to the database - just resets the active session
-// All baskets and their items persist in the database for history
-func ResetDatabase(db *sql.DB) error {
-	// Don't delete anything - keep full history
-	log.Println("🔄 Demo reset complete! All data preserved in database.")
-	return nil
-}
