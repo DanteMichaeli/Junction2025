@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +15,7 @@ import (
 )
 
 var clients = make(map[chan string]bool) // Store clients
-var itemsList = []pkg.Item{}              // In-memory items list
+var itemsList = []pkg.Item{}             // In-memory items list
 
 // CORS middleware
 func enableCORS(w http.ResponseWriter) {
@@ -62,9 +61,10 @@ func broadcastNewItem(item pkg.Item) {
 }
 
 func main() {
-	db, err := sql.Open("sqlite3", "./app.db")
+	// Setup database with schema and sample data
+	db, err := pkg.SetupDatabase("./app.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to setup database:", err)
 	}
 	defer db.Close()
 
@@ -102,11 +102,11 @@ func main() {
 		case "POST":
 			var item pkg.Item
 			json.NewDecoder(r.Body).Decode(&item)
-			
+
 			// Append to in-memory list
 			itemsList = append(itemsList, item)
 			log.Printf("Added item to list: %+v (Total items: %d)", item, len(itemsList))
-			
+
 			w.WriteHeader(http.StatusCreated)
 
 			// Notify via SSE
@@ -115,7 +115,7 @@ func main() {
 		case "PUT":
 			var item pkg.Item
 			json.NewDecoder(r.Body).Decode(&item)
-			
+
 			// Update in in-memory list
 			found := false
 			for i, existingItem := range itemsList {
@@ -126,17 +126,17 @@ func main() {
 					break
 				}
 			}
-			
+
 			if !found {
 				http.Error(w, "Item not found", http.StatusNotFound)
 				return
 			}
-			
+
 			w.WriteHeader(http.StatusOK)
 
 		case "DELETE":
 			id := r.URL.Query().Get("id")
-			
+
 			// Remove from in-memory list
 			found := false
 			for i, item := range itemsList {
@@ -147,12 +147,12 @@ func main() {
 					break
 				}
 			}
-			
+
 			if !found {
 				http.Error(w, "Item not found", http.StatusNotFound)
 				return
 			}
-			
+
 			w.WriteHeader(http.StatusNoContent)
 
 		default:
