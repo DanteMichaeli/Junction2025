@@ -1,6 +1,8 @@
 package pkg
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type Item struct {
 	ID    string  `json:"id"`
@@ -17,6 +19,30 @@ func GetItem(db *sql.DB, id string) (Item, error) {
 	var item Item
 	err := db.QueryRow("SELECT id, name, price FROM items WHERE id = ?", id).Scan(&item.ID, &item.Name, &item.Price)
 	return item, err
+}
+
+func GetAllItems(db *sql.DB) ([]Item, error) {
+	rows, err := db.Query("SELECT id, name, price FROM items")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []Item
+	for rows.Next() {
+		var item Item
+		err := rows.Scan(&item.ID, &item.Name, &item.Price)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 func UpdateItem(db *sql.DB, item Item) error {
