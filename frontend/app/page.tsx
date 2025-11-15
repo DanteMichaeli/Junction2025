@@ -63,12 +63,6 @@ export default function Home() {
     };
   }, []);
 
-  const handleCreateBasket = () => {
-    // This will be connected to your API
-    console.log("Creating new basket...");
-    alert("Create basket functionality - connect to your API");
-  };
-
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
@@ -81,17 +75,9 @@ export default function Home() {
             </div>
 
             {/* Current Basket Display */}
-            <div className="flex items-center gap-4">
-              <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg px-4 py-3">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">Current Basket ID</p>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{currentBasketId}</p>
-              </div>
-              <button
-                onClick={handleCreateBasket}
-                className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              >
-                Create New Basket
-              </button>
+            <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg px-4 py-3">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">Current Basket ID</p>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{currentBasketId}</p>
             </div>
           </div>
         </div>
@@ -106,7 +92,7 @@ export default function Home() {
         ) : (
           <div className="space-y-8">
             {/* Image Classifier */}
-            <ImageClassifier 
+            <ImageClassifier
               onItemClassified={(result) => {
                 console.log("Item classified:", result);
                 // Optionally add to basket or show notification
