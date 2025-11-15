@@ -51,6 +51,25 @@ func UpdateItem(db *sql.DB, item Item) error {
 }
 
 func DeleteItem(db *sql.DB, id string) error {
-	_, err := db.Exec("DELETE FROM items WHERE id = ?", id)
-	return err
+	// Start a transaction to ensure both deletions succeed or fail together
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// First, remove the item from all baskets
+	_, err = tx.Exec("DELETE FROM item_basket WHERE itemID = ?", id)
+	if err != nil {
+		return err
+	}
+
+	// Then, delete the item itself
+	_, err = tx.Exec("DELETE FROM items WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	// Commit the transaction
+	return tx.Commit()
 }
