@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ItemsTable, { Item } from "./components/ItemsTable";
+import ImageClassifier from "./components/ImageClassifier";
 
 // Backend API URL
 const API_URL = "http://localhost:3001";
@@ -104,6 +105,14 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Image Classifier */}
+            <ImageClassifier 
+              onItemClassified={(result) => {
+                console.log("Item classified:", result);
+                // Optionally add to basket or show notification
+              }}
+            />
+
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
