@@ -70,7 +70,7 @@ export default function Home() {
 
   // Test function to add all items to basket
   const handleTestAddItems = async () => {
-    const itemIds = ["pepsi-max", "sunmaid-sour-raisins", "vitamin-well-refresh", "estrella-chips"];
+    const itemIds = ["red-bull", "vitamin-well-refresh", "estrella-chips"];
     
     for (const itemId of itemIds) {
       try {

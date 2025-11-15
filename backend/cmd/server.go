@@ -243,13 +243,24 @@ func main() {
 
 		log.Printf("✅ Added item %s (%s) to basket %s", item.ID, item.Name, activeBasketID)
 
-		// Step 3: Broadcast to frontend via SSE
+		// Step 3: Check if basket is complete (has all 3 items)
+		isComplete, err := pkg.CheckAndCompleteBasket(db, activeBasketID)
+		if err != nil {
+			log.Printf("⚠️ Failed to check basket completion: %v", err)
+		} else if isComplete {
+			log.Printf("🎉 Basket %s completed! All 3 items collected.", activeBasketID)
+		}
+
+		// Step 4: Broadcast to frontend via SSE
 		go broadcastNewItem(item)
 
-		// Return the item data
+		// Return the item data with completion status
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(item)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"item":       item,
+			"isComplete": isComplete,
+		})
 	})
 
 	log.Println("Server starting on port 3001...")

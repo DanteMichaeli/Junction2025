@@ -49,8 +49,8 @@ func createTables(db *sql.DB) error {
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS baskets (
     basketID UUID PRIMARY KEY,
     ownerName TEXT NOT NULL,
-    createDate DATE NOT NULL,
-    status TEXT CHECK(status IN ('pending', 'canceled', 'paid')) NOT NULL
+    createDate DATETIME NOT NULL,
+    completedAt DATETIME
 );`)
 	if err != nil {
 		return err
@@ -76,10 +76,9 @@ func createTables(db *sql.DB) error {
 func insertSampleItems(db *sql.DB) error {
 	// Insert sample items
 	_, err := db.Exec(`INSERT OR IGNORE INTO items (id, name, price) VALUES
-    ('pepsi-max', 'Pepsi Max', 1.99),
-    ('sunmaid-sour-raisins', 'Sunmaid Sour Raisins', 1.50),
-    ('vitamin-well-refresh', 'Vitamin Well Refresh', 3.29),
-    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.99);
+    ('red-bull', 'Red Bull', 2.49),
+    ('vitamin-well-refresh', 'Vitamin Well Refresh', 2.79),
+    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.89);
 `)
 	if err != nil {
 		return err

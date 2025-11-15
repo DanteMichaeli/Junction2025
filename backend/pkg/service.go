@@ -16,10 +16,10 @@ type Item struct {
 
 // Basket represents a shopping basket
 type Basket struct {
-	ID         string    `json:"id"`
-	OwnerName  string    `json:"ownerName"`
-	CreateDate time.Time `json:"createDate"`
-	Status     string    `json:"status"`
+	ID          string     `json:"id"`
+	OwnerName   string     `json:"ownerName"`
+	CreateDate  time.Time  `json:"createDate"`
+	CompletedAt *time.Time `json:"completedAt,omitempty"` // Null if not completed yet
 }
 
 // GetItem fetches item from database by id
@@ -65,8 +65,8 @@ func AddItemToBasket(db *sql.DB, itemID string, basketID string) error {
 func CreateBasket(db *sql.DB, ownerName string) (string, error) {
 	basketUUID := uuid.New().String()
 
-	_, err := db.Exec(`INSERT INTO baskets (basketID, ownerName, createDate, status) VALUES
-		(?, ?, datetime('now'), 'pending');
+	_, err := db.Exec(`INSERT INTO baskets (basketID, ownerName, createDate, completedAt) VALUES
+		(?, ?, datetime('now'), NULL);
 	`, basketUUID, ownerName)
 
 	if err != nil {
@@ -74,4 +74,36 @@ func CreateBasket(db *sql.DB, ownerName string) (string, error) {
 	}
 
 	return basketUUID, nil
+}
+
+// CompleteBasket marks a basket as completed with timestamp
+func CompleteBasket(db *sql.DB, basketID string) error {
+	_, err := db.Exec(`UPDATE baskets SET completedAt = datetime('now') WHERE basketID = ?`, basketID)
+	return err
+}
+
+// CheckAndCompleteBasket checks if basket has all 3 items and completes it
+func CheckAndCompleteBasket(db *sql.DB, basketID string) (bool, error) {
+	// Count distinct items in the basket
+	var count int
+	err := db.QueryRow(`
+		SELECT COUNT(DISTINCT itemID) 
+		FROM item_basket 
+		WHERE basketID = ?
+	`, basketID).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	// If basket has all 3 items, mark it as completed
+	if count >= 3 {
+		err = CompleteBasket(db, basketID)
+		if err != nil {
+			return false, err
+		}
+		return true, nil // Basket completed!
+	}
+
+	return false, nil // Not yet complete
 }
