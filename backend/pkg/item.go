@@ -19,14 +19,39 @@ type Basket struct {
 	Status     string    `json:"status"`
 }
 
-// fetches item from database by id
+// GetItem fetches item from database by id
 func GetItem(db *sql.DB, id string) (Item, error) {
 	var item Item
 	err := db.QueryRow("SELECT id, name, price FROM items WHERE id = ?", id).Scan(&item.ID, &item.Name, &item.Price)
 	return item, err
 }
 
-// adds item to the current basket
+// GetAllItems fetches all items from database
+func GetAllItems(db *sql.DB) ([]Item, error) {
+	rows, err := db.Query("SELECT id, name, price FROM items")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []Item
+	for rows.Next() {
+		var item Item
+		err := rows.Scan(&item.ID, &item.Name, &item.Price)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+// AddItemToBasket adds item to the current basket
 func AddItemToBasket(db *sql.DB, itemID string, basketID string) error {
 	_, err := db.Exec("INSERT INTO item_basket (itemID, basketID) VALUES (?, ?)", itemID, basketID)
 	return err
