@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -233,52 +231,6 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(newItem)
-	})
-
-	// Register the classify-item endpoint
-	http.HandleFunc("/classify-item", func(w http.ResponseWriter, r *http.Request) {
-		enableCORS(w)
-
-		// Handle preflight requests
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method != "POST" {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		// Read the image data from request body
-		imageData, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Failed to read image data", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
-
-		// Create Vision API client
-		ctx := context.Background()
-		classifier, err := pkg.NewVisionClassifier(ctx)
-		if err != nil {
-			log.Printf("Failed to create vision classifier: %v", err)
-			http.Error(w, "Failed to initialize classifier", http.StatusInternalServerError)
-			return
-		}
-		defer classifier.Close()
-
-		// Classify the image
-		result, err := classifier.ClassifyImage(ctx, imageData)
-		if err != nil {
-			log.Printf("Failed to classify image: %v", err)
-			http.Error(w, "Failed to classify image", http.StatusInternalServerError)
-			return
-		}
-
-		// Return the classification result
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
 	})
 
 	log.Println("Server starting on port 3001...")
