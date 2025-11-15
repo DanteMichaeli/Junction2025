@@ -66,7 +66,7 @@ func CreateBasket(db *sql.DB, ownerName string) (string, error) {
 	basketUUID := uuid.New().String()
 
 	_, err := db.Exec(`INSERT INTO baskets (basketID, ownerName, createDate, status) VALUES
-		(?, ?, date('now'), 'pending');
+		(?, ?, datetime('now'), 'pending');
 	`, basketUUID, ownerName)
 
 	if err != nil {
