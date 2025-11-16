@@ -82,7 +82,10 @@ export default function Leaderboard({ apiUrl }: LeaderboardProps) {
                 </p>
               </div>
               <p className="text-3xl font-mono font-bold text-zinc-900 dark:text-zinc-50">
-                {entry.durationSecs}s
+                {entry.durationSecs < 60 
+                  ? `${entry.durationSecs}s` 
+                  : formatDuration(entry.durationSecs)
+                }
               </p>
             </div>
           ))}
