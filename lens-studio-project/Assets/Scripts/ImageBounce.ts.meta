@@ -1,0 +1,47 @@
+- !<AssetImportMetadata/e880ec99-0adb-47c8-ab34-f117305d286c>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 4d7fcb18-a2e7-4555-9581-e5da8c35f144
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 4d7fcb18-a2e7-4555-9581-e5da8c35f144
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> f66743a9-4100-4ea0-bd48-df6259eb1857
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/f66743a9-4100-4ea0-bd48-df6259eb1857>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 251cd293-0ede-4165-bbc8-ea098e9b5177
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    amplitude: false
+    period: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - amplitude: !<float> 5.000000
+      period: 1.500000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input float amplitude = 5
+    - // @input float period = 1.5

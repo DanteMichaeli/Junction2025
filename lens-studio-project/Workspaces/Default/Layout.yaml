@@ -1,0 +1,40 @@
+dock:
+  isLocked: false
+  main:
+    items:
+      - items:
+          - items:
+              - persistentName: Snap.Plugin.Gui.SceneHierarchyEditor
+                Uuid: 6778142c-0629-4c2a-afc3-92a65ce29e1a
+            type: section
+            current: 0
+          - items:
+              - persistentName: Snap.Plugin.Gui.AssetBrowser
+                Uuid: cd11ace2-8507-4965-a068-d85c26031a6b
+            type: section
+            current: 0
+        sizes:
+          - 571
+          - 294
+        type: splitter
+        orientation: vertical
+      - items:
+          - persistentName: Snap.Plugin.Gui.LoggerPanel
+            Uuid: 81de965d-0c94-4d28-82cf-901740003a1f
+          - persistentName: Snap.Plugin.Gui.InspectorPanel
+            Uuid: 7ebc1274-6bd5-4e7b-9aad-68d35ba41f59
+        type: section
+        current: 1
+      - items:
+          - persistentName: Snap.Plugin.Gui.PreviewPanel
+            Uuid: 52fc2a95-41a3-427b-a138-1e00eb1c405e
+          - persistentName: Snap.Plugin.AssistantAI.Panel
+            Uuid: df91b2cf-37e1-401c-83fc-3d9f83343e71
+        type: section
+        current: 0
+    sizes:
+      - 434
+      - 557
+      - 465
+    type: splitter
+    orientation: horizontal
