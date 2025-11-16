@@ -290,7 +290,7 @@ export default function Home() {
                   onClick={handleAddRedBull}
                   className="px-7 py-7 bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors"
                 >
-                  Add Red Bull
+                  Test: Add Red Bull
                 </button>
                 <button
                   onClick={handleTestAddItems}
