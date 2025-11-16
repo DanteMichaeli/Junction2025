@@ -46,9 +46,12 @@ export default function Leaderboard({ apiUrl }: LeaderboardProps) {
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+      <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-1">
         🏆 Leaderboard
       </h2>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+        Who is the fastest shopper?
+      </p>
       
       {isLoading ? (
         <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">

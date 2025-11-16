@@ -266,18 +266,18 @@ export default function Home() {
               </div>
               
               {/* Test Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={handleTestAddItems}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors text-sm"
+                  className="px-7 py-7 bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors"
                 >
-                  🧪 Test: Add All Items
+                  Test: Add All Items
                 </button>
                 <button
                   onClick={handleResetDemo}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm"
+                  className="px-7 py-7 bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors"
                 >
-                  🔄 Reset Demo
+                  Reset Demo
                 </button>
               </div>
             </div>
