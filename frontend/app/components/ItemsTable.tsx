@@ -24,6 +24,9 @@ export default function ItemsTable({ items }: ItemsTableProps) {
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                 Price
               </th>
             </tr>
@@ -31,7 +34,7 @@ export default function ItemsTable({ items }: ItemsTableProps) {
           <tbody className="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">
                   No items found
                 </td>
               </tr>
@@ -43,6 +46,9 @@ export default function ItemsTable({ items }: ItemsTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900 dark:text-zinc-50">
                     {item.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-600 dark:text-zinc-400">
+                    {item.category}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-300">
                     €{item.price.toFixed(2)}
