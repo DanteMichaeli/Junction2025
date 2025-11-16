@@ -412,26 +412,6 @@ The Lens uses:
 - Returns product ID
 - Sends to backend API
 
-## ⏱️ Timer System
-
-### Frontend Timer
-- Starts when user clicks "Start Shopping"
-- Updates every second
-- Displays in MM:SS format
-- Stops when basket completes
-- Turns green on completion
-
-### Backend Timestamps
-- `createDate`: Basket creation time
-- `completedAt`: When 3rd item added
-- Precision: Seconds (DATETIME)
-- Duration: `completedAt - createDate`
-
-### Synchronization
-- Frontend timer is client-side (for display)
-- Backend timestamps are source of truth
-- Leaderboard uses backend calculations
-
 ## 🎯 Demo Workflow
 
 ### For Hackathon Judges
