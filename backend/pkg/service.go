@@ -76,6 +76,49 @@ func CreateBasket(db *sql.DB, ownerName string) (string, error) {
 	return basketUUID, nil
 }
 
+// LeaderboardEntry represents a completed basket with duration
+type LeaderboardEntry struct {
+	OwnerName    string `json:"ownerName"`
+	DurationSecs int    `json:"durationSecs"`
+	CompletedAt  string `json:"completedAt"`
+}
+
+// GetLeaderboard returns completed baskets sorted by duration (fastest first)
+func GetLeaderboard(db *sql.DB, limit int) ([]LeaderboardEntry, error) {
+	query := `
+		SELECT 
+			ownerName,
+			CAST((julianday(completedAt) - julianday(createDate)) * 86400 AS INTEGER) as durationSecs,
+			completedAt
+		FROM baskets
+		WHERE completedAt IS NOT NULL
+		ORDER BY durationSecs ASC
+		LIMIT ?
+	`
+
+	rows, err := db.Query(query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var entries []LeaderboardEntry
+	for rows.Next() {
+		var entry LeaderboardEntry
+		err := rows.Scan(&entry.OwnerName, &entry.DurationSecs, &entry.CompletedAt)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return entries, nil
+}
+
 // CompleteBasket marks a basket as completed with timestamp
 func CompleteBasket(db *sql.DB, basketID string) error {
 	_, err := db.Exec(`UPDATE baskets SET completedAt = datetime('now') WHERE basketID = ?`, basketID)

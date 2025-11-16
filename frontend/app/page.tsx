@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ItemsTable, { Item } from "./components/ItemsTable";
+import Leaderboard from "./components/Leaderboard";
 
 // Backend API URL
 const API_URL = "http://localhost:3001";
@@ -347,6 +348,13 @@ export default function Home() {
               </h2>
               <ItemsTable items={items} />
             </div>
+          </div>
+        )}
+
+        {/* Leaderboard Section */}
+        {!isLoading && (
+          <div className="mt-8">
+            <Leaderboard apiUrl={API_URL} />
           </div>
         )}
       </main>

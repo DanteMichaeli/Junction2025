@@ -105,6 +105,32 @@ func main() {
 	// Register the SSE endpoint
 	http.HandleFunc("/events", sseHandler)
 
+	// Register leaderboard endpoint
+	http.HandleFunc("/leaderboard", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "GET" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Get top 10 fastest shoppers
+		leaderboard, err := pkg.GetLeaderboard(db, 10)
+		if err != nil {
+			log.Printf("Failed to get leaderboard: %v", err)
+			http.Error(w, "Failed to get leaderboard", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(leaderboard)
+	})
+
 	// Register endpoint to get current basket ID
 	http.HandleFunc("/current-basket", func(w http.ResponseWriter, r *http.Request) {
 		enableCORS(w)
