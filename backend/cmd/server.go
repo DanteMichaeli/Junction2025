@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"moneybadgers-backend/pkg"
 
@@ -293,6 +294,12 @@ func main() {
 		json.NewEncoder(w).Encode(responseData)
 	})
 
-	log.Println("Server starting on port 3001...")
-	log.Fatal(http.ListenAndServe(":3001", nil))
+	// Get port from environment variable (Cloud Run sets this)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3001" // Default for local development
+	}
+
+	log.Printf("Server starting on port %s...\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
