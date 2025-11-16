@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WalkThrough – Live AR Demo</title>
+  <style>
+    :root {
+      --wolt-blue: #00b3e6;
+      --wolt-dark: #001320;
+      --wolt-bg: #020712;
+      --accent-purple: #6c5ce7;
+      --accent-cyan: #26e6ff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(38, 230, 255, 0.25), transparent 55%),
+        radial-gradient(circle at 100% 0%, rgba(108, 92, 231, 0.3), transparent 55%),
+        linear-gradient(145deg, #00060f, #020712 55%, #001320);
+      color: #f9fcff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .page-shell {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+      color: rgba(220, 236, 250, 0.9);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0%, #ffffff, #00b3e6);
+      box-shadow: 0 0 18px rgba(0, 179, 230, 0.7);
+    }
+
+    main {
+      background: rgba(0, 15, 30, 0.88);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 28px 24px 24px;
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.7);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tag {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: rgba(219, 237, 252, 0.96);
+    }
+
+    h1 {
+      font-size: clamp(30px, 4vw, 36px);
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .title-highlight {
+      background: linear-gradient(120deg, var(--wolt-blue), var(--accent-cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(223, 237, 251, 0.9);
+      margin-bottom: 24px;
+      max-width: 560px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .info-card {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 12px 12px 11px;
+      background: rgba(1, 20, 38, 0.9);
+    }
+
+    .info-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(185, 207, 228, 0.86);
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f4fbff;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .cta-btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--wolt-blue), var(--accent-cyan));
+      color: var(--wolt-dark);
+      font-size: 14px;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      box-shadow: 0 14px 32px rgba(0, 128, 204, 0.7);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+
+    .cta-btn span.icon {
+      font-size: 18px;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 20px 44px rgba(0, 179, 230, 0.75);
+    }
+
+    .cta-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 8px 18px rgba(0, 64, 102, 0.8);
+    }
+
+    .cta-note {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f9fcff;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .cta-main {
+      background: linear-gradient(120deg, var(--wolt-blue), var(--accent-cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .cta-location {
+      color: rgba(193, 219, 240, 0.95);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .support-copy {
+      margin-top: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(205, 225, 241, 0.9);
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 11px;
+      color: rgba(180, 205, 226, 0.85);
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header>
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>WalkThrough</span>
+      </div>
+      <span>AI × AR Grocery Companion</span>
+    </header>
+
+    <main>
+      <div class="tag-row">
+        <span class="tag">Live demo</span>
+        <span class="tag">Viewed through AR glasses</span>
+      </div>
+
+      <h1>
+        Try <span class="title-highlight">WalkThrough</span> live on the 5th floor.
+      </h1>
+
+      <p class="subtitle">
+        We are running a live demo of our AI-guided grocery shopping companion. Put on AR glasses and see how
+        a simple meal request becomes a smart list, in-store guidance, and item confirmation in your field of view.
+      </p>
+
+      <section class="info-grid" aria-label="Demo details">
+        <div class="info-card">
+          <div class="info-label">Location</div>
+          <div class="info-value">5th floor · Area #5</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Experience</div>
+          <div class="info-value">Guided AR Spectacles walkthrough</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Time</div>
+          <div class="info-value">Drop-in · 3–5 min per person</div>
+        </div>
+      </section>
+
+                        <div class="cta-row">
+        <p class="cta-note">
+          <span class="cta-main">Come try the demo</span>
+          <span class="cta-location">5th floor · Area #5</span>
+        </p>
+      </div>
+
+      <p class="support-copy">
+        WalkThrough explores how AI and AR can make everyday grocery trips faster and more intuitive, preparing for a future
+        where spatial computing becomes as common as mobile apps today.
+      </p>
+    </main>
+
+    <footer>
+      WalkThrough · Prototype built for an AR × AI grocery shopping experience.
+    </footer>
+  </div>
+</body>
+</html>
