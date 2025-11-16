@@ -5,7 +5,7 @@ import ItemsTable, { Item } from "./components/ItemsTable";
 import Leaderboard from "./components/Leaderboard";
 
 // Backend API URL
-const API_URL = "http://localhost:3001";
+const API_URL = "https://walkthrough-backend-719447017050.europe-north1.run.app";
 
 export default function Home() {
   const [items, setItems] = useState<Item[]>([]); // Store catalog
@@ -64,15 +64,15 @@ export default function Home() {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         // Check if this is an item or completion message
         if (data.item) {
           const newItem: Item = data.item;
           console.log("New item added to cart:", newItem);
-          
+
           // Add item to cart (allow duplicates)
           setCartItems((prevCart) => [...prevCart, newItem]);
-          
+
           // Check if basket is complete
           if (data.isComplete) {
             setIsComplete(true);
@@ -101,7 +101,7 @@ export default function Home() {
   // Test function to add all items to basket
   const handleTestAddItems = async () => {
     const itemIds = ["red-bull", "vitamin-well-refresh", "estrella-chips"];
-    
+
     for (const itemId of itemIds) {
       try {
         const response = await fetch(`${API_URL}/add-item-to-basket`, {
@@ -111,16 +111,16 @@ export default function Home() {
           },
           body: JSON.stringify({ itemId }),
         });
-        
+
         if (response.ok) {
           console.log(`✅ Added ${itemId} to basket`);
         }
       } catch (error) {
         console.error(`❌ Failed to add ${itemId}:`, error);
       }
-      
+
       // Small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
   };
 
@@ -134,7 +134,7 @@ export default function Home() {
         },
         body: JSON.stringify({ itemId: "red-bull" }),
       });
-      
+
       if (response.ok) {
         console.log("✅ Added Red Bull to basket");
       }
@@ -149,17 +149,17 @@ export default function Home() {
       const response = await fetch(`${API_URL}/reset-demo`, {
         method: "POST",
       });
-      
+
       if (response.ok) {
         console.log("✅ Demo reset successfully");
-        
+
         // Clear everything and return to welcome screen
         setCartItems([]);
         setCurrentBasketId("");
         setHasStarted(false);
         setUserName("");
         setNameInput("");
-        
+
         alert("Demo reset! Returning to welcome screen.");
       }
     } catch (error) {
@@ -173,13 +173,13 @@ export default function Home() {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   // Handle start shopping
   const handleStartShopping = async () => {
     if (!nameInput.trim()) return;
-    
+
     try {
       // Create new basket with user's name
       const response = await fetch(`${API_URL}/create-basket`, {
@@ -189,20 +189,20 @@ export default function Home() {
         },
         body: JSON.stringify({ ownerName: nameInput.trim() }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log("✅ Basket created:", data);
-        
+
         // Set user name and basket ID
         setUserName(nameInput.trim());
         setCurrentBasketId(data.basketId);
-        
+
         // Start the timer
         setStartTime(Date.now());
         setElapsedTime(0);
         setIsComplete(false);
-        
+
         setHasStarted(true);
       } else {
         alert("Failed to create basket");
@@ -218,16 +218,15 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
         <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl p-8 max-w-md w-full">
-          <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 text-center">
-            Walk Through™
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center">
-            The future of shopping
-          </p>
-          
+          <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 text-center">WalkThrough</h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center">The future of shopping</p>
+
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+              >
                 Enter your name to start shopping
               </label>
               <input
@@ -235,12 +234,12 @@ export default function Home() {
                 type="text"
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleStartShopping()}
+                onKeyPress={(e) => e.key === "Enter" && handleStartShopping()}
                 placeholder="Your name"
                 className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
               />
             </div>
-            
+
             <button
               onClick={handleStartShopping}
               disabled={!nameInput.trim()}
@@ -261,29 +260,31 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Walk Through™</h1>
+              <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">WalkThrough</h1>
               <p className="text-zinc-600 dark:text-zinc-400 mt-1">Welcome, {userName}!</p>
             </div>
-            
+
             {/* Timer Display */}
             <div className="flex items-center gap-4">
-              <div className={`px-6 py-3 rounded-lg ${
-                isComplete 
-                  ? 'bg-green-100 dark:bg-green-900 border-2 border-green-500' 
-                  : 'bg-blue-100 dark:bg-blue-900'
-              }`}>
+              <div
+                className={`px-6 py-3 rounded-lg ${
+                  isComplete
+                    ? "bg-green-100 dark:bg-green-900 border-2 border-green-500"
+                    : "bg-blue-100 dark:bg-blue-900"
+                }`}
+              >
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">
-                  {isComplete ? '✅ Completed' : '⏱️ Time'}
+                  {isComplete ? "✅ Completed" : "⏱️ Time"}
                 </p>
-                <p className={`text-3xl font-mono font-bold ${
-                  isComplete 
-                    ? 'text-green-700 dark:text-green-300' 
-                    : 'text-blue-700 dark:text-blue-300'
-                }`}>
+                <p
+                  className={`text-3xl font-mono font-bold ${
+                    isComplete ? "text-green-700 dark:text-green-300" : "text-blue-700 dark:text-blue-300"
+                  }`}
+                >
                   {formatTime(elapsedTime)}
                 </p>
               </div>
-              
+
               {/* Test Buttons */}
               <div className="flex gap-3">
                 <button
@@ -321,14 +322,10 @@ export default function Home() {
             {/* Left Side: Shopping Cart */}
             <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                  Cart
-                </h2>
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Cart ID: {currentBasketId}
-                </span>
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Cart</h2>
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">Cart ID: {currentBasketId}</span>
               </div>
-              
+
               {cartItems.length === 0 ? (
                 <div className="text-center py-12 text-zinc-500 dark:text-zinc-400">
                   Cart is empty. Scan groceries with AR spectacles to add them!
@@ -351,8 +348,8 @@ export default function Home() {
                         className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={item.thumbnail} 
+                          <img
+                            src={item.thumbnail}
                             alt={item.name}
                             className="w-12 h-12 object-cover rounded"
                           />
@@ -374,7 +371,7 @@ export default function Home() {
                       </div>
                     ));
                   })()}
-                  
+
                   {/* Cart Total */}
                   <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-700">
                     <div className="flex items-center justify-between">
@@ -384,7 +381,7 @@ export default function Home() {
                       </p>
                     </div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                      {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in cart
+                      {cartItems.length} item{cartItems.length !== 1 ? "s" : ""} in cart
                     </p>
                   </div>
                 </div>
@@ -393,9 +390,7 @@ export default function Home() {
 
             {/* Right Side: Store Items */}
             <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-                Store Items
-              </h2>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">Store Items</h2>
               <ItemsTable items={items} />
             </div>
           </div>

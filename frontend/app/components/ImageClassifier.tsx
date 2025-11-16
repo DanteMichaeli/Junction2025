@@ -14,7 +14,7 @@ interface ImageClassifierProps {
   onItemClassified?: (result: ClassificationResult) => void;
 }
 
-const API_URL = "http://localhost:3001";
+const API_URL = "https://walkthrough-backend-719447017050.europe-north1.run.app";
 
 export default function ImageClassifier({ onItemClassified }: ImageClassifierProps) {
   const [isClassifying, setIsClassifying] = useState(false);
@@ -72,12 +72,9 @@ export default function ImageClassifier({ onItemClassified }: ImageClassifierPro
     }
   };
 
-
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-        Scan Item
-      </h2>
+      <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">Scan Item</h2>
 
       <div className="space-y-4">
         {/* Preview - Shows after image is uploaded */}
@@ -112,16 +109,16 @@ export default function ImageClassifier({ onItemClassified }: ImageClassifierPro
 
         {/* Classification Result */}
         {result && (
-          <div className={`p-4 rounded-lg ${
-            result.matched 
-              ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-              : "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
-          }`}>
+          <div
+            className={`p-4 rounded-lg ${
+              result.matched
+                ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                : "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
+            }`}
+          >
             {result.matched ? (
               <div>
-                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
-                  Item Identified!
-                </h3>
+                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Item Identified!</h3>
                 <p className="text-green-800 dark:text-green-200">
                   <strong>{result.itemName}</strong>
                 </p>
@@ -155,4 +152,3 @@ export default function ImageClassifier({ onItemClassified }: ImageClassifierPro
     </div>
   );
 }
-
