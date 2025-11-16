@@ -1,0 +1,21 @@
+# Lens Studio cache & generated files
+/LensStudioCache/
+/Cache/
+/Temp/
+/Build/
+/Dist/
+/Preview/
+
+# Autosave files
+*.autosave
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
