@@ -9,9 +9,10 @@ import (
 
 // Item represents a store item
 type Item struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Price    float64 `json:"price"`
+	Category string  `json:"category"`
 }
 
 // Basket represents a shopping basket
@@ -25,13 +26,13 @@ type Basket struct {
 // GetItem fetches item from database by id
 func GetItem(db *sql.DB, id string) (Item, error) {
 	var item Item
-	err := db.QueryRow("SELECT id, name, price FROM items WHERE id = ?", id).Scan(&item.ID, &item.Name, &item.Price)
+	err := db.QueryRow("SELECT id, name, price, category FROM items WHERE id = ?", id).Scan(&item.ID, &item.Name, &item.Price, &item.Category)
 	return item, err
 }
 
 // GetAllItems fetches all items from database
 func GetAllItems(db *sql.DB) ([]Item, error) {
-	rows, err := db.Query("SELECT id, name, price FROM items")
+	rows, err := db.Query("SELECT id, name, price, category FROM items")
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func GetAllItems(db *sql.DB) ([]Item, error) {
 	var items []Item
 	for rows.Next() {
 		var item Item
-		err := rows.Scan(&item.ID, &item.Name, &item.Price)
+		err := rows.Scan(&item.ID, &item.Name, &item.Price, &item.Category)
 		if err != nil {
 			return nil, err
 		}

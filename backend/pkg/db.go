@@ -35,18 +35,24 @@ func SetupDatabase(dbPath string) (*sql.DB, error) {
 
 // createTables creates all necessary database tables
 func createTables(db *sql.DB) error {
+	// Drop existing tables to ensure clean schema
+	db.Exec(`DROP TABLE IF EXISTS item_basket;`)
+	db.Exec(`DROP TABLE IF EXISTS items;`)
+	db.Exec(`DROP TABLE IF EXISTS baskets;`)
+
 	// Create Items table
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS items (
+	_, err := db.Exec(`CREATE TABLE items (
     id STRING PRIMARY KEY,
     name STRING NOT NULL,
-    price DECIMAL(10, 2) NOT NULL
+    price DECIMAL(10, 2) NOT NULL,
+    category STRING NOT NULL
 );`)
 	if err != nil {
 		return err
 	}
 
 	// Create Baskets table
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS baskets (
+	_, err = db.Exec(`CREATE TABLE baskets (
     basketID UUID PRIMARY KEY,
     ownerName TEXT NOT NULL,
     createDate DATETIME NOT NULL,
@@ -57,7 +63,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	// Create Item-Basket (join) table
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS item_basket (
+	_, err = db.Exec(`CREATE TABLE item_basket (
     itemID STRING,
     basketID UUID,
     FOREIGN KEY(itemID) REFERENCES items(id),
@@ -74,11 +80,11 @@ func createTables(db *sql.DB) error {
 // insertSampleItems inserts predefined sample items only
 // Baskets are created by users when they start shopping
 func insertSampleItems(db *sql.DB) error {
-	// Insert sample items
-	_, err := db.Exec(`INSERT OR IGNORE INTO items (id, name, price) VALUES
-    ('red-bull', 'Red Bull', 2.49),
-    ('vitamin-well-refresh', 'Vitamin Well Refresh', 2.79),
-    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.89);
+	// Insert sample items with categories
+	_, err := db.Exec(`INSERT INTO items (id, name, price, category) VALUES
+    ('red-bull', 'Red Bull', 2.49, 'Beverage'),
+    ('vitamin-well-refresh', 'Vitamin Well Refresh', 2.79, 'Beverage'),
+    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.89, 'Snacks');
 `)
 	if err != nil {
 		return err
