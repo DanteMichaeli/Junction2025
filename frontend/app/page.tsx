@@ -124,6 +124,25 @@ export default function Home() {
     }
   };
 
+  // Test function to add a single Red Bull
+  const handleAddRedBull = async () => {
+    try {
+      const response = await fetch(`${API_URL}/add-item-to-basket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId: "red-bull" }),
+      });
+      
+      if (response.ok) {
+        console.log("✅ Added Red Bull to basket");
+      }
+    } catch (error) {
+      console.error("❌ Failed to add Red Bull:", error);
+    }
+  };
+
   // Reset demo function
   const handleResetDemo = async () => {
     try {
@@ -268,6 +287,12 @@ export default function Home() {
               {/* Test Buttons */}
               <div className="flex gap-3">
                 <button
+                  onClick={handleAddRedBull}
+                  className="px-7 py-7 bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  Add Red Bull
+                </button>
+                <button
                   onClick={handleTestAddItems}
                   className="px-7 py-7 bg-zinc-700 hover:bg-zinc-800 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors"
                 >
@@ -310,27 +335,45 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {cartItems.map((item, index) => (
-                    <div
-                      key={`${item.id}-${index}`}
-                      className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={item.thumbnail} 
-                          alt={item.name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                        <div>
-                          <p className="font-medium text-zinc-900 dark:text-zinc-50">{item.name}</p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">#{item.id}</p>
+                  {(() => {
+                    // Group items by ID and count quantities
+                    const groupedItems = cartItems.reduce((acc, item) => {
+                      if (!acc[item.id]) {
+                        acc[item.id] = { item, quantity: 0 };
+                      }
+                      acc[item.id].quantity++;
+                      return acc;
+                    }, {} as Record<string, { item: Item; quantity: number }>);
+
+                    return Object.values(groupedItems).map(({ item, quantity }) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={item.thumbnail} 
+                            alt={item.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                          <div>
+                            <p className="font-medium text-zinc-900 dark:text-zinc-50">{item.name}</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">#{item.id}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {quantity > 1 && (
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded">
+                              x{quantity}
+                            </span>
+                          )}
+                          <p className="font-bold text-zinc-900 dark:text-zinc-50">
+                            €{(item.price * quantity).toFixed(2)}
+                          </p>
                         </div>
                       </div>
-                      <p className="font-bold text-zinc-900 dark:text-zinc-50">
-                        €{item.price.toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                   
                   {/* Cart Total */}
                   <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-700">
