@@ -45,7 +45,8 @@ func createTables(db *sql.DB) error {
     id STRING PRIMARY KEY,
     name STRING NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    category STRING NOT NULL
+    category STRING NOT NULL,
+    thumbnail STRING NOT NULL
 );`)
 	if err != nil {
 		return err
@@ -80,11 +81,11 @@ func createTables(db *sql.DB) error {
 // insertSampleItems inserts predefined sample items only
 // Baskets are created by users when they start shopping
 func insertSampleItems(db *sql.DB) error {
-	// Insert sample items with categories
-	_, err := db.Exec(`INSERT INTO items (id, name, price, category) VALUES
-    ('red-bull', 'Red Bull', 2.49, 'Beverage'),
-    ('vitamin-well-refresh', 'Vitamin Well Refresh', 2.79, 'Beverage'),
-    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.89, 'Snacks');
+	// Insert sample items with categories and thumbnails
+	_, err := db.Exec(`INSERT INTO items (id, name, price, category, thumbnail) VALUES
+    ('red-bull', 'Red Bull', 2.49, 'Beverage', 'https://media.istockphoto.com/id/458716829/photo/red-bull.jpg?s=612x612&w=0&k=20&c=0CsBVsXdrA7PV1gkUF4VHBkPGh4Vtyq9uNJAMTQObBA='),
+    ('vitamin-well-refresh', 'Vitamin Well Refresh', 2.79, 'Beverage', 'https://izerex.sk/storage/images/product/3666/images/540x540_2x/KsqjUh3l3FFMhMY24e1fCfgS4xMGRJ52FSY0EAvN.webp'),
+    ('estrella-chips', 'Estrella Maapähkinä Rinkula', 2.89, 'Snacks', 'https://www.estrella.fi/wp-content/uploads/2025/09/10002046-40002554-Estrella-Maapahkinarinkula-175g_C1N1_1-639x1024.png');
 `)
 	if err != nil {
 		return err

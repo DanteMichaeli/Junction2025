@@ -315,9 +315,16 @@ export default function Home() {
                       key={`${item.id}-${index}`}
                       className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
                     >
-                      <div>
-                        <p className="font-medium text-zinc-900 dark:text-zinc-50">{item.name}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">#{item.id}</p>
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={item.thumbnail} 
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div>
+                          <p className="font-medium text-zinc-900 dark:text-zinc-50">{item.name}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">#{item.id}</p>
+                        </div>
                       </div>
                       <p className="font-bold text-zinc-900 dark:text-zinc-50">
                         €{item.price.toFixed(2)}
