@@ -184,117 +184,6 @@ CREATE TABLE item_basket (
 ```
 
 Links items to baskets (many-to-many relationship).
-
-## 🔌 API Endpoints
-
-### GET /items
-Returns all available products in the store.
-
-**Response:**
-```json
-[
-  {
-    "id": "red-bull",
-    "name": "Red Bull",
-    "price": 2.49,
-    "category": "Beverage",
-    "thumbnail": "https://..."
-  }
-]
-```
-
-### POST /create-basket
-Creates a new shopping basket for a user.
-
-**Request:**
-```json
-{
-  "ownerName": "Alice"
-}
-```
-
-**Response:**
-```json
-{
-  "basketId": "7f3679ad-0b2b-4c44-bc5f-49d1333b17d7",
-  "ownerName": "Alice"
-}
-```
-
-### POST /add-item-to-basket
-Adds an item to the active basket (called by AR glasses).
-
-**Request:**
-```json
-{
-  "itemId": "red-bull"
-}
-```
-
-**Response:**
-```json
-{
-  "item": {
-    "id": "red-bull",
-    "name": "Red Bull",
-    "price": 2.49,
-    "category": "Beverage",
-    "thumbnail": "https://..."
-  },
-  "isComplete": false
-}
-```
-
-When the 3rd unique item is added, `isComplete` becomes `true` and `completedAt` is set in the database.
-
-### GET /current-basket
-Returns the currently active basket ID.
-
-**Response:**
-```json
-{
-  "basketId": "7f3679ad-0b2b-4c44-bc5f-49d1333b17d7"
-}
-```
-
-### GET /leaderboard
-Returns top 10 fastest shoppers.
-
-**Response:**
-```json
-[
-  {
-    "ownerName": "Alice",
-    "durationSecs": 45,
-    "completedAt": "2025-11-16 14:23:45"
-  }
-]
-```
-
-### POST /reset-demo
-Resets the active session (returns to welcome screen).
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Database reset successfully"
-}
-```
-
-**Note:** This does NOT delete basket history - all data persists!
-
-### GET /events
-Server-Sent Events endpoint for real-time updates.
-
-**Event Format:**
-```json
-{
-  "item": {...},
-  "isComplete": true
-}
-```
-
 ## 🎮 User Flow
 
 ### 1. Welcome Screen
@@ -395,22 +284,6 @@ Items are grouped by ID with quantity badges:
 - Returns to welcome screen
 - Preserves all database history
 
-### Manual Testing with cURL
-
-```bash
-# Add item to basket
-curl -X POST "http://localhost:3001/add-item-to-basket" \
-  -H "Content-Type: application/json" \
-  -d '{"itemId": "red-bull"}'
-
-# Get leaderboard
-curl -X GET "http://localhost:3001/leaderboard"
-
-# Create basket
-curl -X POST "http://localhost:3001/create-basket" \
-  -H "Content-Type: application/json" \
-  -d '{"ownerName": "Test User"}'
-```
 
 ## 📈 Data Persistence
 
@@ -434,19 +307,6 @@ This allows you to:
 ## 🎯 Basket Completion Logic
 
 A basket is considered **complete** when it contains **3 distinct items**.
-
-**SQL Query:**
-```sql
-SELECT COUNT(DISTINCT itemID) 
-FROM item_basket 
-WHERE basketID = ?
-```
-
-When count ≥ 3:
-1. `completedAt` is set to `datetime('now')`
-2. Duration is calculated: `completedAt - createDate`
-3. Basket appears on leaderboard
-4. Timer turns green and stops
 
 **Duration Calculation:**
 ```sql
@@ -485,27 +345,6 @@ Result in seconds.
   "isComplete": true  // ← Triggers timer stop
 }
 ```
-
-## 🏆 Leaderboard System
-
-### Ranking Logic
-
-1. Query all completed baskets
-2. Calculate duration for each
-3. Sort by duration (ascending)
-4. Return top 10
-
-### Display Format
-
-- **< 60 seconds:** Show as "45s"
-- **≥ 60 seconds:** Show as "1:23" (MM:SS)
-
-### Visual Hierarchy
-
-- 🥇 **1st place:** Gold background
-- 🥈 **2nd place:** Silver background
-- 🥉 **3rd place:** Bronze background
-- **Others:** Regular background
 
 ## 🛠️ Development
 
