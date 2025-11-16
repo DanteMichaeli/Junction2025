@@ -1,0 +1,868 @@
+# WalkThrough™ - AR Shopping Experience
+
+**The future of shopping** - A real-time AR shopping system using Snapchat Spectacles, built for Junction 2025 hackathon.
+
+## 🎯 Project Overview
+
+WalkThrough is an innovative shopping experience that combines AR glasses (Snapchat Spectacles), real-time backend processing, and a live dashboard to create a seamless, futuristic shopping journey. Users wear AR glasses that automatically identify products, add them to their basket, and track their shopping speed - all displayed on a live leaderboard!
+
+## 🏗️ Architecture
+
+The project consists of three main components:
+
+```
+Junction2025/
+├── backend/          # Go backend server with SQLite database
+├── frontend/         # Next.js dashboard for real-time visualization
+└── lens/            # Snapchat Lens Studio AR application
+```
+
+### System Flow
+
+```
+AR Glasses (Spectacles)
+    ↓ (scan and classify product)
+    ↓
+Backend API (Go + SQLite)
+    ↓ (Server-Sent Events)
+    ↓
+Frontend Dashboard (Next.js)
+    ↓ (display in real-time)
+    ↓
+Leaderboard (fastest shoppers)
+```
+
+## 📦 Components
+
+### 1. Backend (Go + SQLite)
+
+**Location:** `/backend`
+
+A RESTful API server that manages:
+- Product catalog (3 items: Red Bull, Vitamin Well, Estrella Chips)
+- Shopping baskets with owner names and timestamps
+- Real-time updates via Server-Sent Events (SSE)
+- Automatic basket completion when all 3 items are collected
+- Leaderboard tracking
+
+**Tech Stack:**
+- Go 1.22+
+- SQLite database
+- Server-Sent Events for real-time updates
+- UUID generation for baskets
+
+**Key Features:**
+- Automatic basket completion detection
+- Shopping duration tracking (createDate → completedAt)
+- Persistent basket history
+- Real-time broadcasting to all connected dashboards
+
+### 2. Frontend (Next.js + React)
+
+**Location:** `/frontend`
+
+A real-time dashboard that displays:
+- Live shopping cart updates
+- Product catalog with images
+- Timer showing shopping duration
+- Leaderboard of fastest shoppers
+- Welcome screen for user registration
+
+**Tech Stack:**
+- Next.js 16.0.3
+- React with TypeScript
+- Tailwind CSS for styling
+- Server-Sent Events for real-time updates
+
+**Key Features:**
+- Real-time cart updates (no refresh needed)
+- Grouped items with quantity badges
+- Live timer with completion detection
+- Scrollable leaderboard
+- Dark mode support
+
+### 3. Lens (Snapchat Spectacles AR)
+
+**Location:** `/lens`
+
+AR application for Snapchat Spectacles that:
+- Identifies products using computer vision
+- Sends product IDs to backend
+- Provides visual feedback to the user
+
+**Tech Stack:**
+- Lens Studio
+- SnapML for machine learning
+- JavaScript for scripting
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Go 1.22 or higher
+- Node.js 18+ and npm
+- Snapchat Lens Studio (for AR development)
+
+### Backend Setup
+
+```bash
+cd backend
+
+# Start the server
+go run cmd/server.go
+```
+
+The backend will:
+- Create SQLite database (`app.db`)
+- Set up tables (items, baskets, item_basket)
+- Insert 3 sample products
+- Start server on `http://localhost:3001`
+
+### Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`
+
+### Lens Setup
+
+1. Open Lens Studio
+2. Load the project from `/lens` directory
+3. Configure the backend API endpoint
+4. Build and deploy to Spectacles
+
+## 📊 Database Schema
+
+### Items Table
+```sql
+CREATE TABLE items (
+    id STRING PRIMARY KEY,
+    name STRING NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    category STRING NOT NULL,
+    thumbnail STRING NOT NULL
+);
+```
+
+**Sample Data:**
+- Red Bull (€2.49) - Beverage
+- Vitamin Well Refresh (€2.79) - Beverage
+- Estrella Maapähkinä Rinkula (€2.89) - Snacks
+
+### Baskets Table
+```sql
+CREATE TABLE baskets (
+    basketID UUID PRIMARY KEY,
+    ownerName TEXT NOT NULL,
+    createDate DATETIME NOT NULL,
+    completedAt DATETIME
+);
+```
+
+**Fields:**
+- `basketID`: Unique UUID generated for each shopping session
+- `ownerName`: Customer's name
+- `createDate`: When shopping started (timestamp)
+- `completedAt`: When all 3 items were collected (NULL if ongoing)
+
+### Item-Basket Table (Join)
+```sql
+CREATE TABLE item_basket (
+    itemID STRING,
+    basketID UUID,
+    FOREIGN KEY(itemID) REFERENCES items(id),
+    FOREIGN KEY(basketID) REFERENCES baskets(basketID)
+);
+```
+
+Links items to baskets (many-to-many relationship).
+
+## 🔌 API Endpoints
+
+### GET /items
+Returns all available products in the store.
+
+**Response:**
+```json
+[
+  {
+    "id": "red-bull",
+    "name": "Red Bull",
+    "price": 2.49,
+    "category": "Beverage",
+    "thumbnail": "https://..."
+  }
+]
+```
+
+### POST /create-basket
+Creates a new shopping basket for a user.
+
+**Request:**
+```json
+{
+  "ownerName": "Alice"
+}
+```
+
+**Response:**
+```json
+{
+  "basketId": "7f3679ad-0b2b-4c44-bc5f-49d1333b17d7",
+  "ownerName": "Alice"
+}
+```
+
+### POST /add-item-to-basket
+Adds an item to the active basket (called by AR glasses).
+
+**Request:**
+```json
+{
+  "itemId": "red-bull"
+}
+```
+
+**Response:**
+```json
+{
+  "item": {
+    "id": "red-bull",
+    "name": "Red Bull",
+    "price": 2.49,
+    "category": "Beverage",
+    "thumbnail": "https://..."
+  },
+  "isComplete": false
+}
+```
+
+When the 3rd unique item is added, `isComplete` becomes `true` and `completedAt` is set in the database.
+
+### GET /current-basket
+Returns the currently active basket ID.
+
+**Response:**
+```json
+{
+  "basketId": "7f3679ad-0b2b-4c44-bc5f-49d1333b17d7"
+}
+```
+
+### GET /leaderboard
+Returns top 10 fastest shoppers.
+
+**Response:**
+```json
+[
+  {
+    "ownerName": "Alice",
+    "durationSecs": 45,
+    "completedAt": "2025-11-16 14:23:45"
+  }
+]
+```
+
+### POST /reset-demo
+Resets the active session (returns to welcome screen).
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Database reset successfully"
+}
+```
+
+**Note:** This does NOT delete basket history - all data persists!
+
+### GET /events
+Server-Sent Events endpoint for real-time updates.
+
+**Event Format:**
+```json
+{
+  "item": {...},
+  "isComplete": true
+}
+```
+
+## 🎮 User Flow
+
+### 1. Welcome Screen
+- User enters their name
+- Clicks "Start Shopping"
+- Backend creates new basket with UUID
+- Timer starts
+
+### 2. Shopping Experience
+- User wears Snapchat Spectacles
+- AR glasses identify products
+- Items automatically added to basket
+- Dashboard updates in real-time
+- Timer counts up
+
+### 3. Completion
+- When 3 unique items are collected:
+  - Timer stops and turns green
+  - `completedAt` timestamp recorded
+  - "🎉 Basket completed!" logged
+  - Duration calculated
+
+### 4. Leaderboard
+- Completed baskets appear on leaderboard
+- Sorted by duration (fastest first)
+- Shows: 🥇🥈🥉 medals for top 3
+- Updates every 5 seconds
+
+### 5. Reset
+- Click "Reset Demo"
+- Returns to welcome screen
+- Basket history preserved in database
+- Ready for next user
+
+## 🎨 Frontend Features
+
+### Dashboard Layout
+
+**Header:**
+- Title and welcome message
+- Live timer (MM:SS format)
+- Test buttons for demo
+
+**Main Content:**
+- **Cart (Left):** Live shopping cart with product images
+- **Store Items (Right):** Product catalog with categories
+- **Leaderboard (Bottom):** Top 10 fastest shoppers
+
+### Cart Display
+
+Items are grouped by ID with quantity badges:
+
+```
+[IMAGE] Red Bull           x2  €4.98
+        #red-bull
+
+[IMAGE] Vitamin Well           €2.79
+        #vitamin-well-refresh
+```
+
+**Features:**
+- Product thumbnails (48x48px)
+- Quantity badges (x2, x3, etc.)
+- Multiplied prices
+- Scrollable (max 320px height)
+- Running total at bottom
+
+### Leaderboard
+
+```
+🥇 Alice Smith      9s
+🥈 Bob Johnson     12s
+🥉 Charlie Brown   15s
+#4 David Lee       18s
+```
+
+**Features:**
+- Medal icons for top 3
+- Smart time formatting (seconds or MM:SS)
+- Scrollable (max 240px height)
+- Auto-refreshes every 5 seconds
+
+## 🧪 Testing
+
+### Test Buttons
+
+**Test: Add Red Bull**
+- Adds one Red Bull to cart
+- Click multiple times to test quantity grouping
+
+**Test: Add All Items**
+- Adds all 3 items at once
+- Triggers basket completion
+- Tests full flow
+
+**Reset Demo**
+- Clears frontend session
+- Returns to welcome screen
+- Preserves all database history
+
+### Manual Testing with cURL
+
+```bash
+# Add item to basket
+curl -X POST "http://localhost:3001/add-item-to-basket" \
+  -H "Content-Type: application/json" \
+  -d '{"itemId": "red-bull"}'
+
+# Get leaderboard
+curl -X GET "http://localhost:3001/leaderboard"
+
+# Create basket
+curl -X POST "http://localhost:3001/create-basket" \
+  -H "Content-Type: application/json" \
+  -d '{"ownerName": "Test User"}'
+```
+
+## 📈 Data Persistence
+
+### What Persists:
+- ✅ All baskets (with owner names)
+- ✅ All basket items
+- ✅ All completion timestamps
+- ✅ Complete shopping history
+
+### What Resets:
+- ❌ Active basket ID (cleared on reset)
+- ❌ Frontend display (returns to welcome)
+- ❌ Timer (resets for new user)
+
+This allows you to:
+- Track all demos at the hackathon
+- Analyze shopping patterns
+- Review basket history
+- Calculate statistics
+
+## 🎯 Basket Completion Logic
+
+A basket is considered **complete** when it contains **3 distinct items**.
+
+**SQL Query:**
+```sql
+SELECT COUNT(DISTINCT itemID) 
+FROM item_basket 
+WHERE basketID = ?
+```
+
+When count ≥ 3:
+1. `completedAt` is set to `datetime('now')`
+2. Duration is calculated: `completedAt - createDate`
+3. Basket appears on leaderboard
+4. Timer turns green and stops
+
+**Duration Calculation:**
+```sql
+(julianday(completedAt) - julianday(createDate)) * 86400
+```
+Result in seconds.
+
+## 🔄 Real-Time Updates (SSE)
+
+### How It Works
+
+1. **Frontend connects** to `/events` endpoint
+2. **Backend maintains** list of connected clients
+3. **When item added**, backend broadcasts to all clients
+4. **Frontend receives** event and updates cart
+5. **No page refresh** needed!
+
+### Event Format
+
+```javascript
+// Item added
+{
+  "item": {
+    "id": "red-bull",
+    "name": "Red Bull",
+    "price": 2.49,
+    "category": "Beverage",
+    "thumbnail": "https://..."
+  },
+  "isComplete": false
+}
+
+// Basket completed
+{
+  "item": {...},
+  "isComplete": true  // ← Triggers timer stop
+}
+```
+
+## 🏆 Leaderboard System
+
+### Ranking Logic
+
+1. Query all completed baskets
+2. Calculate duration for each
+3. Sort by duration (ascending)
+4. Return top 10
+
+### Display Format
+
+- **< 60 seconds:** Show as "45s"
+- **≥ 60 seconds:** Show as "1:23" (MM:SS)
+
+### Visual Hierarchy
+
+- 🥇 **1st place:** Gold background
+- 🥈 **2nd place:** Silver background
+- 🥉 **3rd place:** Bronze background
+- **Others:** Regular background
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+backend/
+├── cmd/
+│   └── server.go          # Main server entry point
+├── pkg/
+│   ├── db.go             # Database setup and management
+│   └── service.go        # Business logic (items, baskets)
+├── go.mod                # Go dependencies
+└── app.db               # SQLite database (auto-generated)
+
+frontend/
+├── app/
+│   ├── components/
+│   │   ├── ItemsTable.tsx      # Product catalog display
+│   │   └── Leaderboard.tsx     # Leaderboard component
+│   ├── page.tsx                # Main dashboard page
+│   └── layout.tsx              # App layout
+├── package.json
+└── next.config.ts
+
+lens/
+└── [Lens Studio project files]
+```
+
+### Key Files
+
+**Backend:**
+- `cmd/server.go` - HTTP server, API endpoints, SSE handling
+- `pkg/db.go` - Database schema, table creation, sample data
+- `pkg/service.go` - CRUD operations, basket logic, leaderboard
+
+**Frontend:**
+- `app/page.tsx` - Main dashboard with cart, timer, controls
+- `app/components/ItemsTable.tsx` - Product catalog table
+- `app/components/Leaderboard.tsx` - Ranking display
+
+## 🎨 Design Decisions
+
+### Why SQLite?
+- Lightweight and portable
+- No separate database server needed
+- Perfect for hackathon demos
+- Easy to reset and inspect
+
+### Why Server-Sent Events?
+- Unidirectional (server → client) is all we need
+- Simpler than WebSockets
+- Built-in browser support
+- Automatic reconnection
+
+### Why Group Items by ID?
+- Cleaner cart display
+- Shows quantity at a glance
+- Reduces visual clutter
+- Better UX for duplicate scans
+
+### Why Persist All Baskets?
+- Track all demos at hackathon
+- Analyze shopping patterns
+- Show cumulative leaderboard
+- Review history later
+
+## 📱 AR Glasses Integration
+
+### Lens Studio Setup
+
+The AR glasses (Snapchat Spectacles) run a Lens that:
+
+1. **Captures camera feed**
+2. **Runs ML model** to identify products
+3. **Sends HTTP request** to backend:
+   ```javascript
+   POST /add-item-to-basket
+   {
+     "itemId": "red-bull"
+   }
+   ```
+4. **Receives response** with completion status
+5. **Shows visual feedback** to user
+
+### Product Identification
+
+The Lens uses:
+- Image classification model
+- Trained on 3 product types
+- Returns product ID
+- Sends to backend API
+
+## ⏱️ Timer System
+
+### Frontend Timer
+- Starts when user clicks "Start Shopping"
+- Updates every second
+- Displays in MM:SS format
+- Stops when basket completes
+- Turns green on completion
+
+### Backend Timestamps
+- `createDate`: Basket creation time
+- `completedAt`: When 3rd item added
+- Precision: Seconds (DATETIME)
+- Duration: `completedAt - createDate`
+
+### Synchronization
+- Frontend timer is client-side (for display)
+- Backend timestamps are source of truth
+- Leaderboard uses backend calculations
+
+## 🎯 Demo Workflow
+
+### For Hackathon Judges
+
+1. **Open dashboard** on large screen
+2. **Hand Spectacles** to participant
+3. **Participant enters name** on dashboard
+4. **Timer starts** automatically
+5. **Participant scans products** in store
+6. **Cart updates in real-time** on screen
+7. **Timer stops** when all 3 items found
+8. **Leaderboard updates** with new time
+9. **Click "Reset Demo"** for next participant
+
+### For Multiple Participants
+
+- Each participant creates their own basket
+- All baskets persist in database
+- Leaderboard shows all completed baskets
+- Competitive element drives engagement!
+
+## 🔧 Configuration
+
+### Backend Configuration
+
+**Port:** 3001 (default)
+**Database:** `./app.db` (SQLite)
+**CORS:** Enabled for all origins (development)
+
+To change:
+- Edit `cmd/server.go` line 299: `http.ListenAndServe(":3001", nil)`
+
+### Frontend Configuration
+
+**Backend URL:** Set in `app/page.tsx`:
+```typescript
+const API_URL = "http://localhost:3001";
+```
+
+For production:
+```typescript
+const API_URL = "https://your-backend-url.com";
+```
+
+### Product Configuration
+
+Edit `backend/pkg/db.go` to change products:
+
+```go
+_, err := db.Exec(`INSERT INTO items (id, name, price, category, thumbnail) VALUES
+    ('your-id', 'Product Name', 9.99, 'Category', 'https://image-url.com');
+`)
+```
+
+## 🐛 Troubleshooting
+
+### Items Not Appearing
+
+**Issue:** Frontend shows empty store items
+**Solution:** 
+```bash
+cd backend
+rm app.db
+go run cmd/server.go
+```
+
+### Basket Creation Fails
+
+**Issue:** "Failed to create basket"
+**Solution:** Check backend logs for schema errors, delete `app.db` and restart
+
+### SSE Not Working
+
+**Issue:** Cart doesn't update in real-time
+**Solution:** 
+- Check backend is running
+- Verify CORS is enabled
+- Check browser console for SSE errors
+
+### Timer Not Starting
+
+**Issue:** Timer shows 00:00 and doesn't count
+**Solution:** Ensure `setStartTime(Date.now())` is called in `handleStartShopping`
+
+### Leaderboard Empty
+
+**Issue:** No entries show even after completing baskets
+**Solution:** 
+- Check `completedAt` is set in database
+- Verify backend `/leaderboard` endpoint returns data
+- Check browser console for errors
+
+## 📊 Analytics Queries
+
+### View All Baskets
+```sql
+sqlite3 app.db "SELECT * FROM baskets;"
+```
+
+### View Completed Baskets with Duration
+```sql
+sqlite3 app.db "
+SELECT 
+    ownerName,
+    CAST((julianday(completedAt) - julianday(createDate)) * 86400 AS INTEGER) as duration_secs,
+    createDate,
+    completedAt
+FROM baskets
+WHERE completedAt IS NOT NULL
+ORDER BY duration_secs ASC;
+"
+```
+
+### View Items in Each Basket
+```sql
+sqlite3 app.db "
+SELECT 
+    b.ownerName,
+    b.basketID,
+    i.name,
+    i.price
+FROM baskets b
+JOIN item_basket ib ON b.basketID = ib.basketID
+JOIN items i ON ib.itemID = i.id
+ORDER BY b.createDate DESC;
+"
+```
+
+### Average Shopping Time
+```sql
+sqlite3 app.db "
+SELECT 
+    AVG((julianday(completedAt) - julianday(createDate)) * 86400) as avg_duration_secs
+FROM baskets
+WHERE completedAt IS NOT NULL;
+"
+```
+
+## 🚀 Deployment
+
+### Backend Deployment
+
+**Option 1: Cloud Run (Google Cloud)**
+```bash
+gcloud run deploy walkthrough-backend \
+  --source . \
+  --region europe-north1 \
+  --allow-unauthenticated
+```
+
+**Option 2: Heroku**
+```bash
+heroku create walkthrough-backend
+git push heroku main
+```
+
+### Frontend Deployment
+
+**Vercel (Recommended for Next.js):**
+```bash
+cd frontend
+vercel deploy
+```
+
+Update `API_URL` in `page.tsx` to your deployed backend URL.
+
+### Lens Deployment
+
+1. Build Lens in Lens Studio
+2. Submit to Snapchat
+3. Deploy to Spectacles
+4. Configure backend API endpoint in Lens
+
+## 🎓 Technical Highlights
+
+### Real-Time Architecture
+- Server-Sent Events for instant updates
+- No polling needed
+- Efficient bandwidth usage
+- Automatic reconnection
+
+### Smart Grouping
+- Items grouped by ID in cart
+- Quantity badges for duplicates
+- Multiplied prices
+- Clean, intuitive display
+
+### Automatic Completion
+- Detects when basket has 3 unique items
+- Sets timestamp automatically
+- Broadcasts completion status
+- Stops timer on frontend
+
+### Persistent History
+- All baskets saved forever
+- Complete audit trail
+- Analytics-ready data
+- Leaderboard across all sessions
+
+## 🏅 Hackathon Features
+
+### Demo-Friendly
+- Quick reset between demos
+- Clear visual feedback
+- Competitive leaderboard
+- Professional UI
+
+### Scalable
+- Handles multiple simultaneous users
+- Real-time updates for all viewers
+- Persistent data across sessions
+- Easy to add more products
+
+### Impressive Tech
+- AR integration (Spectacles)
+- Real-time SSE
+- Automatic completion detection
+- Live leaderboard
+- Sub-second response times
+
+## 📝 Future Enhancements
+
+- [ ] Payment integration
+- [ ] Receipt generation
+- [ ] Email notifications
+- [ ] Advanced analytics dashboard
+- [ ] Multi-store support
+- [ ] Product recommendations
+- [ ] Discount codes
+- [ ] Social sharing
+- [ ] Mobile app version
+- [ ] Voice feedback in AR glasses
+
+## 👥 Team
+
+Built for Junction 2025 by Money Badgers team.
+
+## 📄 License
+
+MIT License - Built for Junction 2025 Hackathon
+
+---
+
+**Built with ❤️ at Junction 2025**
+
+*The future of shopping is here.*
+
